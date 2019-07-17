@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:agenda_contatos/helpers/contact_helper.dart';
+import 'package:agenda_contatos/ui/contact_page.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
@@ -17,9 +18,7 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
 
-    helper.getAllcontacts().then((list) {
-      contacts = list;
-    });
+    _getAllcontacts();
   }
 
   @override
@@ -32,7 +31,9 @@ class _HomeState extends State<Home> {
       ),
       backgroundColor: Colors.white,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          _showContactPage();
+        },
         child: Icon(Icons.add),
         backgroundColor: Colors.red,
       ),
@@ -47,14 +48,17 @@ class _HomeState extends State<Home> {
 
   Widget _contactCard(context, index) {
     return GestureDetector(
+      onTap: (){
+        _showContactPage(contact: contacts[index]);
+      },
       child: Card(
         child: Padding(
           padding: EdgeInsets.all(10.0),
           child: Row(
             children: <Widget>[
               Container(
-                height: 10.0,
-                width: 10.0,
+                height: 150.0,
+                width: 150.0,
                 decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     image: DecorationImage(
@@ -76,15 +80,11 @@ class _HomeState extends State<Home> {
                     ),
                     Text(
                       contacts[index].email ?? "",
-                      style: TextStyle(
-                        fontSize: 22.0
-                      ),
+                      style: TextStyle(fontSize: 22.0),
                     ),
                     Text(
                       contacts[index].phone ?? "",
-                      style: TextStyle(
-                        fontSize: 22.0
-                      ),
+                      style: TextStyle(fontSize: 22.0),
                     ),
                   ],
                 ),
@@ -94,5 +94,26 @@ class _HomeState extends State<Home> {
         ),
       ),
     );
+  }
+
+  void _showContactPage({Contact contact}) async {
+    final recContact = await Navigator.push(
+        context, MaterialPageRoute(builder: (context) => ContactPage(contact: contact,)));
+    if(recContact != null){
+      if(contact!=null){
+        await helper.updateContact(recContact);
+        _getAllcontacts();
+      }else{
+        await helper.saveContact(recContact); // add novo contato
+      }
+      _getAllcontacts();// atualiza contato existente
+
+    }
+  }
+
+  void _getAllcontacts() {
+    helper.getAllcontacts().then((list) {
+      contacts = list;
+    });
   }
 }
